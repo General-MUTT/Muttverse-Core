@@ -5,7 +5,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ import org.bukkit.GameRule;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.SpawnCategory;
 import org.jetbrains.annotations.NotNull;
@@ -87,6 +91,7 @@ public class MVCommandCompletions extends PaperCommandCompletions {
         registerAsyncCompletion("commands", this::suggestCommands);
         registerAsyncCompletion("destinations", this::suggestDestinations);
         registerStaticCompletion("difficulties", suggestEnums(Difficulty.class));
+        registerAsyncCompletion("purgeTypes", this::suggestPurgeTypes);
         registerStaticCompletion("environments", suggestEnums(World.Environment.class));
         registerAsyncCompletion("flags", this::suggestFlags);
         registerStaticCompletion("gamemodes", suggestEnums(GameMode.class));
@@ -357,5 +362,33 @@ public class MVCommandCompletions extends PaperCommandCompletions {
                     .getStringPropertyHandle()
                     .getSuggestedPropertyValue(propertyName, context.getInput(), action, context.getSender());
         }).getOrElse(Collections.emptyList());
+    }
+                            //PurgeCommand Tab Completion w/comma support
+    private Collection<String> suggestPurgeTypes(BukkitCommandCompletionContext context) {
+        String input = context.getInput().toLowerCase();
+
+        Set<String> baseTypes = new HashSet<>(List.of("all", "monster", "animal", "misc"));
+        for (EntityType type : EntityType.values()) {
+            if (type.isAlive() && type.isSpawnable()) {
+                baseTypes.add(type.name().toLowerCase());
+            }
+        }
+
+        if (!input.contains(",")) {
+            return baseTypes.stream()
+                    .filter(s -> s.startsWith(input))
+                    .sorted()
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+        }
+
+        String[] parts = input.split(",");
+        String last = parts[parts.length - 1];
+        Set<String> alreadyTyped = new HashSet<>(Arrays.asList(parts));
+        alreadyTyped.remove(last);
+
+        return baseTypes.stream()
+                .filter(type -> type.startsWith(last) && !alreadyTyped.contains(type))
+                .sorted()
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

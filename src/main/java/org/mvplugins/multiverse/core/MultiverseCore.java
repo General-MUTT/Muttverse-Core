@@ -7,11 +7,7 @@
 
 package org.mvplugins.multiverse.core;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+
 import java.util.logging.Logger;
 
 import com.dumptruckman.minecraft.util.Logging;
@@ -20,12 +16,10 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.entity.EntityType;
+
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jvnet.hk2.annotations.Service;
-import java.util.stream.Collectors;
-
 import org.mvplugins.multiverse.core.anchor.AnchorManager;
 import org.mvplugins.multiverse.core.destination.Destination;
 import org.mvplugins.multiverse.core.destination.DestinationsProvider;
@@ -111,39 +105,6 @@ public class MultiverseCore extends MultiverseModule {
             registerDynamicListeners(CoreListener.class);
             setUpLocales();
             registerCommands(CoreCommand.class);
-
-
-                        //Tab Completion with comma support
-            var commandManager = commandManagerProvider.get();
-
-            commandManager.getCommandCompletions().registerAsyncCompletion("purgeTypes", context -> {
-                String input = context.getInput().toLowerCase();
-
-                Set<String> baseTypes = new HashSet<>(List.of("all", "monsters", "animals"));
-                for (EntityType type : EntityType.values()) {
-                    if (type.isAlive() && type.isSpawnable()) {
-                        baseTypes.add(type.name().toLowerCase());
-                    }
-                }
-
-                if (!input.contains(",")) {
-                    return baseTypes.stream()
-                            .filter(s -> s.startsWith(input))
-                            .sorted()
-                            .collect(Collectors.toCollection(LinkedHashSet::new));
-                }
-
-                String[] parts = input.split(",");
-                String last = parts[parts.length - 1];
-                Set<String> alreadyTyped = new HashSet<>(Arrays.asList(parts));
-                alreadyTyped.remove(last);
-
-                return baseTypes.stream()
-                        .filter(type -> type.startsWith(last) && !alreadyTyped.contains(type))
-                        .sorted()
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
-            });
-
             registerDestinations();
             setupMetrics();
             loadPlaceholderApiIntegration();

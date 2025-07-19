@@ -37,7 +37,7 @@ public final class EntityPurger {
         return purgeCount.get();
     }
 
-    public int purgeEntities(LoadedMultiverseWorld world, SpawnCategory... spawnCategories) {
+    public static int purgeEntities(LoadedMultiverseWorld world, SpawnCategory... spawnCategories) {
         Set<SpawnCategory> spawnCategoriesSet = Set.of(spawnCategories);
         AtomicInteger purgeCount = new AtomicInteger(0);
         world.getBukkitWorld().peek(bukkitWorld -> {
@@ -51,12 +51,14 @@ public final class EntityPurger {
         return purgeCount.get();
     }
 
-    public int purgeAllEntities(LoadedMultiverseWorld world) {
+    public static int purgeAllEntities(LoadedMultiverseWorld world) {
         AtomicInteger purgeCount = new AtomicInteger(0);
         world.getBukkitWorld().peek(bukkitWorld -> {
             for (Entity entity : bukkitWorld.getEntities()) {
-                entity.remove();
-                purgeCount.incrementAndGet();
+                if (!(entity instanceof org.bukkit.entity.Player)) {
+                    entity.remove();
+                    purgeCount.incrementAndGet();
+                }
             }
         });
         return purgeCount.get();
